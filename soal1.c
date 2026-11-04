@@ -56,7 +56,7 @@ void scan(FILE *file, char target[], char zonearr[][10], float zonetemp[]){
             zonetemp[i] = zonetempget;
         }
     }
-    if (!found){
+    if (found == 0){
         printf("999");
         abort();
     }
@@ -86,6 +86,7 @@ void bubbleSort(float arr[], int n, char zonearr[][10]){
                     char stemptemp[30];
                     strcpy(zonearr[j], zonearr[j+1]);
                     strcpy(zonearr[j+1], stemptemp);
+                    //printf("%s - ", zonearr[0]);
                 }
             }
         }
