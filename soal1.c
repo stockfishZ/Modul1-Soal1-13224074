@@ -1,3 +1,7 @@
+//Rafa Satria Pratama / 13224074
+//Modul 1: Soal 1
+//4 November 2026
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
