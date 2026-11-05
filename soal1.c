@@ -1,8 +1,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
-//cek apakah file empty
+typedef struct {
+    char id[30];
+    float temp;
+} Sensor;
+
 void check(FILE *file){
     if (file == NULL){
         printf("failed");
@@ -10,84 +15,61 @@ void check(FILE *file){
     }
 }
 
-void scan(FILE *file, char target[], char zonearr[][10], float zonetemp[]){
+int scan(FILE *file, char target[], Sensor **arr){
     int found = 0;
     int i = 0;
     char line[256];
     while (fgets(line, sizeof(line), file) != NULL){
-        if (strstr(line, target)){
+        char zonename[30];
+        char zonecheck[30];
+        int j = 0; int k = 0;
+
+        while (line[j] != ',' && line[j] != '\0'){
+            zonename[k] = line[j];
+            j++; k++;
+        }
+        zonename[k] = '\0';
+        if (line[j] == '\0') continue;
+
+        j++; k = 0;
+        while (line[j] != ',' && line[j] != '\0'){
+            zonecheck[k] = line[j];
+            j++; k++;
+        }
+        zonecheck[k] = '\0';
+        if (line[j] == '\0') continue;
+
+        if (strcmp(zonecheck, target) == 0){
             found = 1;
-            char zonename[30];
-            int j = 0; int k = 0;
-
-            while (true){
-                if (line[j] != ','){
-                    zonename[k] = line[j];
-                    j++; k++;
-                }else{
-                    break;
-                }
-            }
-
-            strcpy(zonearr[i], zonename);
-            //printf("ok: %s\n", zonearr[i]);
-            
-            char zonetemptemp[30];
-            float zonetempget;
-            int commacounter = 0;
-            
-            j = 0; k = 0;
-            while (true){
-                if (line[j] == ','){
-                    commacounter++;
-                }
-                if (commacounter == 2){
-                    zonetemptemp[k] = line[j+1];
-                    k++;
-                }
-                if (line[j] == '\0'){
-                    break;
-                }
-                j++;
-            }
-            
-            zonetempget = atof(zonetemptemp);
-            //printf("yooi: %.2f\n", zonetempget);
-            zonetemp[i] = zonetempget;
+            *arr = realloc(*arr, (i + 1) * sizeof(Sensor));
+            strcpy((*arr)[i].id, zonename);
+            (*arr)[i].temp = atof(line + j + 1);
+            i++;
         }
     }
     if (found == 0){
         printf("999");
-        abort();
+        exit(0);
     }
+    return i;
 }
 
-void swap(float* xp, float* yp){
-    float temp = *xp;
+void swap(Sensor* xp, Sensor* yp){
+    Sensor temp = *xp;
     *xp = *yp;
     *yp = temp;
 }
 
-void bubbleSort(float arr[], int n, char zonearr[][10]){
+void bubbleSort(Sensor arr[], int n){
     int i, j;
     bool swapped;
     for (i = 0; i < n - 1; i++) {
         swapped = false;
         for (j = 0; j < n - i - 1; j++) {
-            if (arr[j] < arr[j + 1]) {
+            if (arr[j].temp < arr[j + 1].temp ||
+               (arr[j].temp == arr[j + 1].temp && strcmp(arr[j].id, arr[j + 1].id) > 0)) {
                 swap(&arr[j], &arr[j + 1]);
-                char stemp[30];
-                strcpy(stemp, zonearr[j]);
-                strcpy(zonearr[j], zonearr[j+1]);
-                strcpy(zonearr[j+1], stemp);
                 swapped = true;
-            }else if (arr[j] == arr[j+1]){
-                if (strcmp(zonearr[j], zonearr[j+1]) > 0){
-                    char stemptemp[30];
-                    strcpy(zonearr[j], zonearr[j+1]);
-                    strcpy(zonearr[j+1], stemptemp);
-                    //printf("%s - ", zonearr[0]);
-                }
             }
         }
 
@@ -96,26 +78,132 @@ void bubbleSort(float arr[], int n, char zonearr[][10]){
     }
 }
 
-void printarray(char zonearr[][10], float zonetemp[]){
-    //printf("%s - ", zonearr[0]);
-    for (int i = 0;  i < 10/*sizeof(zonearr)/sizeof(zonearr[0])*/; i++){
-        //printf("%s - ", zonearr[i]);
-        //printf("%.2f\n", zonetemp[i]);
+void printarray(Sensor arr[], int n){
+    float sum = 0;
+    for (int i = 0; i < n; i++){
+        printf("%s %.2f\n", arr[i].id, arr[i].temp);
+        sum += arr[i].temp;
     }
+    printf("AVERAGE %.2f\n", sum / n);
 }
 
 int main(){
-    char zonearr[10][10];
-    float zonetemp[10];
+    Sensor *data = NULL;
     char filename[30] = ""; char target[30];
-    scanf("%s %s", &filename, &target);
-    
+    scanf("%s %s", filename, target);
+
     FILE *file = fopen(filename, "r");
-    
+
     check(file);
-    scan(file, target, zonearr, zonetemp);
-    bubbleSort(zonetemp, sizeof(zonetemp)/sizeof(zonetemp[0]), zonearr);
-    printarray(zonearr, zonetemp);
+    int n = scan(file, target, &data);
+    fclose(file);
+    bubbleSort(data, n);
+    printarray(data, n);
+    free(data);
+
+    return 0;
+}#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+typedef struct {
+    char id[30];
+    float temp;
+} Sensor;
+
+void check(FILE *file){
+    if (file == NULL){
+        printf("failed");
+        abort();
+    }
+}
+
+int scan(FILE *file, char target[], Sensor **arr){
+    int found = 0;
+    int i = 0;
+    char line[256];
+    while (fgets(line, sizeof(line), file) != NULL){
+        char zonename[30];
+        char zonecheck[30];
+        int j = 0; int k = 0;
+
+        while (line[j] != ',' && line[j] != '\0'){
+            zonename[k] = line[j];
+            j++; k++;
+        }
+        zonename[k] = '\0';
+        if (line[j] == '\0') continue;
+
+        j++; k = 0;
+        while (line[j] != ',' && line[j] != '\0'){
+            zonecheck[k] = line[j];
+            j++; k++;
+        }
+        zonecheck[k] = '\0';
+        if (line[j] == '\0') continue;
+
+        if (strcmp(zonecheck, target) == 0){
+            found = 1;
+            *arr = realloc(*arr, (i + 1) * sizeof(Sensor));
+            strcpy((*arr)[i].id, zonename);
+            (*arr)[i].temp = atof(line + j + 1);
+            i++;
+        }
+    }
+    if (found == 0){
+        printf("999");
+        exit(0);
+    }
+    return i;
+}
+
+void swap(Sensor* xp, Sensor* yp){
+    Sensor temp = *xp;
+    *xp = *yp;
+    *yp = temp;
+}
+
+void bubbleSort(Sensor arr[], int n){
+    int i, j;
+    bool swapped;
+    for (i = 0; i < n - 1; i++) {
+        swapped = false;
+        for (j = 0; j < n - i - 1; j++) {
+            if (arr[j].temp < arr[j + 1].temp ||
+               (arr[j].temp == arr[j + 1].temp && strcmp(arr[j].id, arr[j + 1].id) > 0)) {
+                swap(&arr[j], &arr[j + 1]);
+                swapped = true;
+            }
+        }
+
+        if (swapped == false)
+            break;
+    }
+}
+
+void printarray(Sensor arr[], int n){
+    float sum = 0;
+    for (int i = 0; i < n; i++){
+        printf("%s %.2f\n", arr[i].id, arr[i].temp);
+        sum += arr[i].temp;
+    }
+    printf("AVERAGE %.2f\n", sum / n);
+}
+
+int main(){
+    Sensor *data = NULL;
+    char filename[30] = ""; char target[30];
+    scanf("%s %s", filename, target);
+
+    FILE *file = fopen(filename, "r");
+
+    check(file);
+    int n = scan(file, target, &data);
+    fclose(file);
+    bubbleSort(data, n);
+    printarray(data, n);
+    free(data);
 
     return 0;
 }
