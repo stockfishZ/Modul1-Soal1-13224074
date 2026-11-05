@@ -33,7 +33,9 @@ int scan(FILE *file, char target[], Sensor **arr){
             j++; k++;
         }
         zonename[k] = '\0';
-        if (line[j] == '\0') continue;
+        if (line[j] == '\0'){ 
+            continue;
+        }
 
         j++; k = 0;
         while (line[j] != ',' && line[j] != '\0'){
@@ -41,7 +43,9 @@ int scan(FILE *file, char target[], Sensor **arr){
             j++; k++;
         }
         zonecheck[k] = '\0';
-        if (line[j] == '\0') continue;
+        if (line[j] == '\0'){
+            continue;
+        }
 
         if (strcmp(zonecheck, target) == 0){
             found = 1;
